@@ -3,11 +3,14 @@
 #include "event.h"
 #include "movement.h"
 #include "render.h"
+#include "food.h"
 
 int main(int argc, char *argv[])
 {
-    TGameState *game = malloc(sizeof(TGameState));
-    TTank *player = malloc(sizeof(TTank));
+    srand(time(NULL));
+
+    TGameState *game = (TGameState*)malloc(sizeof(TGameState));
+    TTank *player = (TTank*)malloc(sizeof(TTank));
 
     player->movement_speed = 0;
     player->turret.rotation_angle = 0;
@@ -60,7 +63,18 @@ int main(int argc, char *argv[])
  
     // controls animation loop
     int close = 0;
- 
+    
+    game->remaining_food = 0;
+    for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i)
+        game->food[i] = NULL;
+    for (int i = 0; i < COLONIES_COUNT; ++i)
+        generate_new_colony(game);
+
+    for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
+        if (game->food[i] != NULL)
+            SDL_QueryTexture(game->food_texture[game->food[i]->type], NULL, NULL, &game->food[i]->rect.w, &game->food[i]->rect.h);
+    }
+
     // animation loop
     while (!close) { 
         close = handle_event(game);
@@ -69,6 +83,13 @@ int main(int argc, char *argv[])
 
         game->playground_rect.x = player->body.rect.x - player->x;
         game->playground_rect.y = player->body.rect.y - player->y;
+        printf("PLAYER %f %f\n\n", player->x, player->y);
+        for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
+            if (game->food[i] != NULL) {
+                game->food[i]->rect.x = game->food[i]->x + (WINDOW_WIDTH / 2 - player->x);
+                game->food[i]->rect.y = game->food[i]->y + (WINDOW_HEIGHT / 2 - player->y);
+            }
+        }
 
         render_game(game);
 
@@ -88,6 +109,7 @@ int main(int argc, char *argv[])
     // close SDL
     SDL_Quit();
     free(player);
+    free_food(game->food);
     free(game);
 
     return 0;
