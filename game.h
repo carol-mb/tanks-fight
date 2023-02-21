@@ -13,6 +13,9 @@
 #define TURRET_SIZE 32
 #define PLAYGROUND_SIZE 1024
 
+#define COLONY_POPULATION 12
+#define COLONIES_COUNT 6
+
 typedef struct {
     float x;
     float y;
@@ -36,6 +39,15 @@ typedef struct {
 } TBody;
 
 typedef struct {
+    float x;
+    float y;
+    short health;
+    short type;
+    SDL_Rect rect;
+    double rotation_angle;
+} TFood;
+
+typedef struct {
     TBody body;
     TTurret turret;
     int health;
@@ -51,24 +63,18 @@ typedef struct {
     TBullet* (*shooting_style)();
 } TTank;
 
-
-typedef struct {
-    int health;
-    float x;
-    float y;
-    int width;
-    int height;
-} TFood;
-
 typedef struct {
     TTank *player;
+    TFood *food[COLONIES_COUNT * COLONY_POPULATION];
+    int remaining_food;
+
     SDL_Renderer *renderer;
 
     // rectangles
     SDL_Rect playground_rect;
 
     // textures
-    SDL_Texture* food_textures[3]; 
+    SDL_Texture* food_texture[3]; 
     SDL_Texture* body_texture;
     SDL_Texture* turret_texture;
     SDL_Texture* playground_texture;
