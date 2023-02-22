@@ -43,8 +43,8 @@ void generate_new_colony(TGameState *game) {
     do {
         center_x = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
         center_y = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
-    } while(abs(center_x - (int)game->player->x) < PLAYER_SIZE / 2 
-            && abs(center_y - (int)game->player->x < PLAYER_SIZE) / 2);
+    } while(abs(center_x - (int)game->player->x) < SPREAD_RADIUS 
+            && abs(center_y - (int)game->player->y) < SPREAD_RADIUS);
     for (int i = 0; i < TRIANGLES_COUNT; ++i) {
         if (game->food[pos] == NULL) {
             game->food[pos] = alloc_food(FOOD_TRIANGLE, center_x, center_y);
