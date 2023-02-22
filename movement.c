@@ -74,3 +74,10 @@ void update_turret_position(TTank *player) {
     player->turret.rect.x = (WINDOW_WIDTH - player->turret.rect.w) / 2 + side * (player->body.rect.w / 2) * cos(radians);
     player->turret.rect.y = (WINDOW_HEIGHT - player->turret.rect.h) / 2 + side * (player->body.rect.h / 2) * sin(radians);
 }
+
+void update_bullet_position(TBullet *bullet) {
+    bullet->x += bullet->dx;
+    bullet->y += bullet->dy;
+    bullet->rect.x = bullet->x;
+    bullet->rect.y = bullet->y;
+}

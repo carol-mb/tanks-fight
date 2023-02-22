@@ -1,5 +1,7 @@
 // event.c
 #include "event.h"
+#include "combat.h"
+#include "movement.h"
 
 int handle_event(TGameState* game) {
     SDL_Event event;
@@ -18,15 +20,43 @@ int handle_event(TGameState* game) {
             switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_ESCAPE:
                 close = 1;
-                break;
+            break;
             case SDL_SCANCODE_1:
                 if (game->player->movement_speed <= 5)
                     game->player->movement_speed++;
-                break;
+            break;
+            case SDL_SCANCODE_2:
+                if (game->player->bullet_speed <= 5)
+                    game->player->bullet_speed++;
+            break;
+            case SDL_SCANCODE_3:
+                if (game->player->bullet_time <= 5)
+                    game->player->bullet_time++;
+            break;
+            case SDL_SCANCODE_4:
+                if (game->player->shooting_speed <= 5)
+                    game->player->shooting_speed++;
+            break;
             default:
                 break;
             }
+        case SDL_MOUSEBUTTONDOWN:
+            switch (event.button.button) {
+                case SDL_BUTTON_LEFT:
+                    game->player->shooting_style(game);
+                break;
+            }
+            break;
         }
     }
+
+    const Uint8* state = SDL_GetKeyboardState(NULL);
+    if (state[SDL_SCANCODE_SPACE]) {
+        clock_t stop = clock();
+        printf("%lf %lf\n", ((double)(stop - game->player->last_shoot) / CLOCKS_PER_SEC) * 25, (DEFAULT_SHOOTING_SPEED - game->player->shooting_speed * SHOOT_TIME_BONUS));
+        if (((double)(stop - game->player->last_shoot) / CLOCKS_PER_SEC) * 25 >= (DEFAULT_SHOOTING_SPEED - game->player->shooting_speed * SHOOT_TIME_BONUS))
+            game->player->shooting_style(game);
+    }
+
     return close;
 }

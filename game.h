@@ -5,18 +5,27 @@
 #include <SDL2/SDL_timer.h>
 
 #include <math.h>
+#include <time.h>
 
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 480
 
 #define PLAYER_SIZE 64
 #define TURRET_SIZE 32
+#define BULLET_SIZE 16
 #define PLAYGROUND_SIZE 1024
 
 #define COLONY_POPULATION 12
 #define COLONIES_COUNT 6
 
-typedef struct {
+typedef struct Bullet TBullet;
+typedef struct Turret TTurret;
+typedef struct Body TBody;
+typedef struct Tank TTank;
+typedef struct Food TFood;
+typedef struct GameState TGameState;
+
+struct Bullet{
     float x;
     float y;
     float dx;
@@ -24,30 +33,33 @@ typedef struct {
     int size;
     int power;
     int penetration;
-} TBullet;
+    SDL_Rect rect;
+    time_t creation;
+    double duration;
+};
 
-typedef struct {
+struct Turret {
     int type;
     double rotation_angle;
     SDL_Rect rect;
-} TTurret;
+};
 
-typedef struct {
+struct Body {
     int type;
     int size;
     SDL_Rect rect;
-} TBody;
+};
 
-typedef struct {
+struct Food {
     float x;
     float y;
     short health;
     short type;
     SDL_Rect rect;
     double rotation_angle;
-} TFood;
+};
 
-typedef struct {
+struct Tank {
     TBody body;
     TTurret turret;
     int health;
@@ -57,16 +69,21 @@ typedef struct {
     float y;
     float dx;
     float dy;
-    int shooting_speed;
+    int bullet_speed;
+    int bullet_time;
     int movement_speed;
-    TBullet** bullets;
-    TBullet* (*shooting_style)();
-} TTank;
+    double shooting_speed;
+    clock_t last_shoot;
+    void (*shooting_style)(TGameState*);
+};
 
-typedef struct {
+struct GameState {
     TTank *player;
     TFood *food[COLONIES_COUNT * COLONY_POPULATION];
     int remaining_food;
+    
+    TBullet **bullets;
+    int max_bullets;
 
     SDL_Renderer *renderer;
 
@@ -78,4 +95,5 @@ typedef struct {
     SDL_Texture* body_texture;
     SDL_Texture* turret_texture;
     SDL_Texture* playground_texture;
-} TGameState;
+    SDL_Texture* bullet_texture;
+};
