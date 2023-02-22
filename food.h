@@ -3,8 +3,6 @@
 #include <SDL2/SDL.h>
 #include <time.h>
 
-#define FOOD_TYPES 3
-
 #define FOOD_TRIANGLE 0
 #define FOOD_SQUARE 1
 #define FOOD_HEXAGON 2

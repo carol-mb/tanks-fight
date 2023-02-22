@@ -42,7 +42,12 @@ int main(int argc, char *argv[])
  
     // creates a renderer to render our images
     game->renderer = SDL_CreateRenderer(window, -1, render_flags);
-
+    for (int i = 0; i < FOOD_TYPES; ++i)
+        game->food_texture[i] = NULL; 
+    game->body_texture = NULL;
+    game->turret_texture = NULL;
+    game->playground_texture = NULL;
+    game->bullet_texture = NULL;
     load_textures(game);
  
     // connects our texture with dest to control position
@@ -65,7 +70,10 @@ int main(int argc, char *argv[])
 
     // sets initial y-position of object
     player->y = (WINDOW_HEIGHT - player->body.rect.h) / 2;
- 
+    
+    player->dx = 0;
+    player->dy = 0;
+
     // controls animation loop
     int close = 0;
     

@@ -17,6 +17,7 @@
 
 #define COLONY_POPULATION 12
 #define COLONIES_COUNT 6
+#define FOOD_TYPES 3
 
 typedef struct Bullet TBullet;
 typedef struct Turret TTurret;
@@ -91,7 +92,7 @@ struct GameState {
     SDL_Rect playground_rect;
 
     // textures
-    SDL_Texture* food_texture[3]; 
+    SDL_Texture* food_texture[FOOD_TYPES]; 
     SDL_Texture* body_texture;
     SDL_Texture* turret_texture;
     SDL_Texture* playground_texture;
