@@ -1,8 +1,8 @@
 .PHONY=clean
 
 
-all: event.o movement.o render.o food.o combat.o
-	gcc game.c event.o movement.o render.o food.o combat.o -lSDL2main -lSDL2 -lSDL2_image -lm -o tanks
+all: event.o movement.o render.o food.o combat.o collision.o
+	gcc game.c event.o movement.o render.o food.o combat.o collision.o -lSDL2main -lSDL2 -lSDL2_image -lm -o tanks
 
 event.o: event.c event.h game.h
 	gcc -c event.c
@@ -18,6 +18,9 @@ combat.o: combat.c combat.h game.h
 
 render.o: render.c render.h food.c food.h game.h
 	gcc -c render.c
+
+collision.o: collision.c collision.h game.h
+	gcc -c collision.c
 
 run: all
 	./tanks

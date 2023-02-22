@@ -35,7 +35,7 @@ struct Bullet{
     int power;
     int penetration;
     SDL_Rect rect;
-    time_t creation;
+    clock_t creation;
     double duration;
 };
 
@@ -54,10 +54,13 @@ struct Body {
 struct Food {
     float x;
     float y;
+    float dx;
+    float dy;
     short health;
     short type;
     SDL_Rect rect;
     double rotation_angle;
+    TBullet *last_hit;
 };
 
 struct Tank {
@@ -70,9 +73,12 @@ struct Tank {
     float y;
     float dx;
     float dy;
+    int power;
     int bullet_speed;
     int bullet_time;
+    int bullet_penetration;
     int movement_speed;
+    int body_damage;
     double shooting_speed;
     clock_t last_shoot;
     void (*shooting_style)(TGameState*);

@@ -18,8 +18,12 @@ TFood* alloc_food(short type, int center_x, int center_y) {
         default:
         break;
     }
+    food->dx = 0;
+    food->dy = 0;
     food->x = center_x + rand() % SPREAD_RADIUS;
     food->y = center_y + rand() % SPREAD_RADIUS;
+    food->last_hit = NULL;
+
     food->rotation_angle = rand() % 360;
 
     return food;
@@ -33,33 +37,43 @@ void free_food(TFood *food[]) {
 }
 
 void generate_new_colony(TGameState *game) {
-    TFood **iter = game->food;
-
-    int center_x = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
-    int center_y = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
+    int center_x = 0;
+    int center_y = 0;
+    int pos = 0;
+    do {
+        center_x = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
+        center_y = rand() % (PLAYGROUND_SIZE - SPREAD_RADIUS);
+    } while(abs(center_x - (int)game->player->x) < PLAYER_SIZE / 2 
+            && abs(center_y - (int)game->player->x < PLAYER_SIZE) / 2);
     for (int i = 0; i < TRIANGLES_COUNT; ++i) {
-        if (*iter == NULL)
-            *iter = alloc_food(FOOD_TRIANGLE, center_x, center_y);
+        if (game->food[pos] == NULL) {
+            game->food[pos] = alloc_food(FOOD_TRIANGLE, center_x, center_y);
+            SDL_QueryTexture(game->food_texture[game->food[pos]->type], NULL, NULL, &game->food[pos]->rect.w, &game->food[pos]->rect.h);
+        }
         else {
-            ++iter;
+            ++pos;
             --i;
         }
     }
 
     for (int i = 0; i < SQUARES_COUNT; ++i) {
-        if (*iter == NULL)
-            *iter = alloc_food(FOOD_SQUARE, center_x, center_y);
+        if (game->food[pos] == NULL) {
+            game->food[pos] = alloc_food(FOOD_SQUARE, center_x, center_y);
+            SDL_QueryTexture(game->food_texture[game->food[pos]->type], NULL, NULL, &game->food[pos]->rect.w, &game->food[pos]->rect.h);
+        }
         else {
-            ++iter;
+            ++pos;
             --i;
         }
     }
 
     for (int i = 0; i < HEXAGONS_COUNT; ++i) {
-        if (*iter == NULL)
-            *iter = alloc_food(FOOD_HEXAGON, center_x, center_y);
+        if (game->food[pos] == NULL) {
+            game->food[pos] = alloc_food(FOOD_HEXAGON, center_x, center_y);
+            SDL_QueryTexture(game->food_texture[game->food[pos]->type], NULL, NULL, &game->food[pos]->rect.w, &game->food[pos]->rect.h);
+        }
         else {
-            ++iter;
+            ++pos;
             --i;
         }
     }

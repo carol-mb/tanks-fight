@@ -5,6 +5,7 @@
 #include "render.h"
 #include "food.h"
 #include "combat.h"
+#include "collision.h"
 
 int main(int argc, char *argv[])
 {
@@ -19,6 +20,8 @@ int main(int argc, char *argv[])
     player->turret.rotation_angle = 0;
     player->last_shoot = 0;
     player->shooting_speed = 0;
+    player->bullet_penetration = 0;
+    player->power = 0;
 
     game->player = player;
 
@@ -83,11 +86,6 @@ int main(int argc, char *argv[])
     for (int i = 0; i < COLONIES_COUNT; ++i)
         generate_new_colony(game);
 
-    for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
-        if (game->food[i] != NULL)
-            SDL_QueryTexture(game->food_texture[game->food[i]->type], NULL, NULL, &game->food[i]->rect.w, &game->food[i]->rect.h);
-    }
-
     game->max_bullets = 2;
     game->bullets = (TBullet**)malloc(game->max_bullets * sizeof(TBullet*));
     game->player->shooting_style = default_shoot;
@@ -101,21 +99,85 @@ int main(int argc, char *argv[])
         close = handle_event(game);
         update_player_position(player);
         update_turret_position(player);
-        for (int i = 0; i < game->max_bullets; ++i) {
-            if (game->bullets[i] != NULL) {
-                update_bullet_position(game->bullets[i]);
-                game->bullets[i]->rect.x = game->bullets[i]->x + (WINDOW_WIDTH / 2 - player->x);
-                game->bullets[i]->rect.y = game->bullets[i]->y + (WINDOW_HEIGHT / 2 - player->y);
-                check_bullet(&game->bullets[i]);
-            }
+
+        if (game->remaining_food + COLONY_POPULATION <= COLONIES_COUNT * COLONY_POPULATION) {
+            printf("new colony\n");
+            generate_new_colony(game);
         }
 
         game->playground_rect.x = player->body.rect.x - player->x;
         game->playground_rect.y = player->body.rect.y - player->y;
         for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
             if (game->food[i] != NULL) {
+                if(check_collision(player->x, player->y, PLAYER_SIZE, PLAYER_SIZE,
+                                    game->food[i]->x, game->food[i]->y, game->food[i]->rect.w, game->food[i]->rect.h)) {
+                    game->food[i]->health -= (DEFAULT_BODY_DAMAGE + player->body_damage * BODY_DAMAGE_BONUS);
+                    printf("BODY HIT! New food health %d\n", game->food[i]->health);
+                    player->dx *= 0.75f;
+                    player->dy *= 0.75f;
+                    game->food[i]->dx += player->dx;
+                    game->food[i]->dy += player->dy;
+                    if (game->food[i]->health <= 0) {
+                        free(game->food[i]);
+                        game->food[i] = NULL;
+                        game->remaining_food--;
+                        continue;
+                    }
+                }
+
+                game->food[i]->x += game->food[i]->dx;
+                game->food[i]->y += game->food[i]->dy;
                 game->food[i]->rect.x = game->food[i]->x + (WINDOW_WIDTH / 2 - player->x);
                 game->food[i]->rect.y = game->food[i]->y + (WINDOW_HEIGHT / 2 - player->y);
+
+                game->food[i]->dx *= 0.95f;
+                if (fabs(game->food[i]->dx) < 0.0001f)
+                    game->food[i]->dy = 0;
+                
+                game->food[i]->dy *= 0.95f;
+                if (fabs(game->food[i]->dy) < 0.0001f)
+                    game->food[i]->dy = 0;
+            }
+        }
+
+        for (int i = 0; i < game->max_bullets; ++i) {
+            if (game->bullets[i] != NULL) {
+                update_bullet_position(game->bullets[i]);
+                game->bullets[i]->rect.x = game->bullets[i]->x + (WINDOW_WIDTH / 2 - player->x);
+                game->bullets[i]->rect.y = game->bullets[i]->y + (WINDOW_HEIGHT / 2 - player->y);
+                check_bullet(&game->bullets[i]);
+                if (game->bullets[i] == NULL)
+                    continue;
+                // printf("blocat");
+                for (int j = 0; j < COLONIES_COUNT * COLONY_POPULATION; ++j) {
+                    if (game->food[j] != NULL && game->bullets[i] != NULL) {
+                        int result = check_collision(game->bullets[i]->x, game->bullets[i]->y, BULLET_SIZE, BULLET_SIZE,
+                                                    game->food[j]->x, game->food[j]->y, game->food[j]->rect.w, game->food[j]->rect.h);
+
+                        if (result && game->bullets[i] != game->food[j]->last_hit) {
+                            if (game->food[j]->dx <= 0.0001f)
+                                game->food[j]->dx += (game->bullets[i]->dx / 2);
+                            if (game->food[j]->dy <= 0.0001f)
+                                game->food[j]->dy += (game->bullets[i]->dy / 2);
+                            game->food[j]->health -= game->bullets[i]->power;
+
+                            game->bullets[i]->penetration--;
+                            if (game->bullets[i]->penetration == 0) {
+                                free(game->bullets[i]);
+                                game->bullets[i] = NULL;
+                            }
+
+                            game->food[j]->last_hit = game->bullets[i];
+                            printf("HIT! New food health %d\n", game->food[j]->health);
+                            if (game->food[j]->health <= 0) {
+                                free(game->food[j]);
+                                game->food[j] = NULL;
+                                game->remaining_food--;
+                            }
+
+                        }
+                    }
+                }
             }
         }
         render_game(game);
