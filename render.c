@@ -67,9 +67,6 @@ void render_game(TGameState *game) {
 
     for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
         if (game->food[i] != NULL) {
-            printf("food %d - %d\n", i, game->food[i]->type);
-            printf("%d, %d, %lf\n", game->food[i]->rect.x, game->food[i]->rect.y, game->food[i]->rotation_angle);
-
             SDL_RenderCopyEx(game->renderer,
                             game->food_texture[game->food[i]->type],
                             NULL,

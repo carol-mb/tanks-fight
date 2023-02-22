@@ -37,6 +37,18 @@ int handle_event(TGameState* game) {
                 if (game->player->shooting_speed <= 5)
                     game->player->shooting_speed++;
             break;
+            case SDL_SCANCODE_5:
+                if (game->player->bullet_penetration <= 5)
+                    game->player->bullet_penetration++;
+            break;
+            case SDL_SCANCODE_6:
+                if (game->player->power <= 5)
+                    game->player->power++;
+            break;
+            case SDL_SCANCODE_7:
+                if (game->player->body_damage <= 5)
+                    game->player->body_damage++;
+            break;
             default:
                 break;
             }
@@ -53,7 +65,6 @@ int handle_event(TGameState* game) {
     const Uint8* state = SDL_GetKeyboardState(NULL);
     if (state[SDL_SCANCODE_SPACE]) {
         clock_t stop = clock();
-        printf("%lf %lf\n", ((double)(stop - game->player->last_shoot) / CLOCKS_PER_SEC) * 25, (DEFAULT_SHOOTING_SPEED - game->player->shooting_speed * SHOOT_TIME_BONUS));
         if (((double)(stop - game->player->last_shoot) / CLOCKS_PER_SEC) * 25 >= (DEFAULT_SHOOTING_SPEED - game->player->shooting_speed * SHOOT_TIME_BONUS))
             game->player->shooting_style(game);
     }

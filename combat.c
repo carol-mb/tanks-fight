@@ -2,7 +2,8 @@
 #include "movement.h"
 
 void check_bullet(TBullet **bullet) {
-    if (difftime(time(NULL), (*bullet)->creation) >= (*bullet)->duration) {
+    clock_t stop = clock();
+    if ((double)(stop - (*bullet)->creation) / CLOCKS_PER_SEC * 25 >= (*bullet)->duration) {
         free(*bullet);
         *bullet = NULL;
     }
@@ -32,8 +33,10 @@ void default_shoot(TGameState *game) {
     game->bullets[pos]->rect.h = 16;
     game->bullets[pos]->x = game->player->x - (game->player->body.rect.x - game->player->turret.rect.x) - TURRET_SIZE / 2 - BULLET_SIZE / 2;
     game->bullets[pos]->y = game->player->y - (game->player->body.rect.y - game->player->turret.rect.y) - TURRET_SIZE / 2 - BULLET_SIZE / 2;
+    game->bullets[pos]->penetration = 1 + game->player->bullet_penetration;
+    game->bullets[pos]->power = DEFAULT_BULLET_DAMAGE + game->player->power * BULLET_DAMAGE_BONUS;
 
-    time(&game->bullets[pos]->creation);
+    game->bullets[pos]->creation = clock();
     game->bullets[pos]->duration = DEFAULT_BULLET_TIME + game->player->bullet_time * TIME_BONUS;
 
     int mouse_x;
@@ -51,6 +54,6 @@ void default_shoot(TGameState *game) {
     }
 
     game->bullets[pos]->dx = side * (BULLET_SPEED + game->player->bullet_speed * SPEED_BONUS) * cos(radians);
-    game->bullets[pos]->dy = side * sin(radians);
+    game->bullets[pos]->dy = side * (BULLET_SPEED + game->player->bullet_speed * SPEED_BONUS) * sin(radians);
     game->player->last_shoot = clock();
 }
