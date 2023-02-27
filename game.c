@@ -1,17 +1,39 @@
 // game.c
 #include "game.h"
-#include "event.h"
-#include "movement.h"
-#include "render.h"
-#include "food.h"
-#include "combat.h"
-#include "collision.h"
 
-int main(int argc, char *argv[])
-{
-    srand(time(NULL));
+SDL_Window* window_init() {
+    Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS;
 
+    SDL_Window* window = SDL_CreateWindow("TANKS FIGHT", // creates a window
+                                        SDL_WINDOWPOS_CENTERED,
+                                        SDL_WINDOWPOS_CENTERED,
+                                        WINDOW_WIDTH,
+                                        WINDOW_HEIGHT,
+                                        window_flags);
+
+    return window;
+}
+
+TGameState* game_init() {
     TGameState *game = (TGameState*)malloc(sizeof(TGameState));
+
+    for (int i = 0; i < FOOD_TYPES; ++i)
+        game->food_texture[i] = NULL; 
+    game->body_texture = NULL;
+    game->turret_texture = NULL;
+    game->playground_texture = NULL;
+    game->bullet_texture = NULL;
+
+    // adjust height and width of our image box.
+    game->playground_rect.w = PLAYGROUND_SIZE;
+    game->playground_rect.h = PLAYGROUND_SIZE;
+
+    game->remaining_food = 0;
+
+    return game;
+}
+
+TTank* player_init() {
     TTank *player = (TTank*)malloc(sizeof(TTank));
 
     player->movement_speed = 0;
@@ -22,45 +44,6 @@ int main(int argc, char *argv[])
     player->shooting_speed = 0;
     player->bullet_penetration = 0;
     player->power = 0;
-
-    game->player = player;
-
-    // returns zero on success else non-zero
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
-        printf("error initializing SDL: %s\n", SDL_GetError());
-    }
-
-    Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_MOUSE_FOCUS;
-
-    SDL_Window* window = SDL_CreateWindow("TANKS FIGHT", // creates a window
-                                        SDL_WINDOWPOS_CENTERED,
-                                        SDL_WINDOWPOS_CENTERED,
-                                        WINDOW_WIDTH,
-                                        WINDOW_HEIGHT,
-                                        window_flags);
-
-    // triggers the program that controls
-    // your graphics hardware and sets flags
-    Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
- 
-    // creates a renderer to render our images
-    game->renderer = SDL_CreateRenderer(window, -1, render_flags);
-    for (int i = 0; i < FOOD_TYPES; ++i)
-        game->food_texture[i] = NULL; 
-    game->body_texture = NULL;
-    game->turret_texture = NULL;
-    game->playground_texture = NULL;
-    game->bullet_texture = NULL;
-    load_textures(game);
- 
-    // connects our texture with dest to control position
-    SDL_QueryTexture(game->turret_texture, NULL, NULL, &player->turret.rect.w, &player->turret.rect.h);
-    SDL_QueryTexture(game->body_texture, NULL, NULL, &player->body.rect.w, &player->body.rect.h);
-    SDL_QueryTexture(game->playground_texture, NULL, NULL, &game->playground_rect.w, &game->playground_rect.h);
-
-    // adjust height and width of our image box.
-    game->playground_rect.w = PLAYGROUND_SIZE;
-    game->playground_rect.h = PLAYGROUND_SIZE;
 
     player->turret.rect.w = PLAYER_SIZE;
     player->turret.rect.h = PLAYER_SIZE;
@@ -77,10 +60,41 @@ int main(int argc, char *argv[])
     player->dx = 0;
     player->dy = 0;
 
+    return player;
+}
+
+int main(int argc, char *argv[])
+{
+    srand(time(NULL));
+
+    SDL_Window* window = window_init();
+    TGameState *game = game_init();
+    TTank *player = player_init();
+
+    // triggers the program that controls
+    // your graphics hardware and sets flags
+    Uint32 render_flags = SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC;
+ 
+    // creates a renderer to render our images
+    game->renderer = SDL_CreateRenderer(window, -1, render_flags);
+
+    game->player = player;
+
+    // returns zero on success else non-zero
+    if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+        printf("error initializing SDL: %s\n", SDL_GetError());
+    }
+
+    if (TTF_Init() != 0) {
+        printf("error initializing TTF: %s\n", TTF_GetError());
+    }
+
+    load_textures(game);
+    connect_textures(game, player);
+
     // controls animation loop
     int close = 0;
     
-    game->remaining_food = 0;
     for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i)
         game->food[i] = NULL;
     for (int i = 0; i < COLONIES_COUNT; ++i)
@@ -99,14 +113,12 @@ int main(int argc, char *argv[])
         close = handle_event(game);
         update_player_position(player);
         update_turret_position(player);
+        update_playground_position(game, player);
 
         if (game->remaining_food + COLONY_POPULATION <= COLONIES_COUNT * COLONY_POPULATION) {
             printf("new colony\n");
             generate_new_colony(game);
         }
-
-        game->playground_rect.x = player->body.rect.x - player->x;
-        game->playground_rect.y = player->body.rect.y - player->y;
         for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
             if (game->food[i] != NULL) {
                 if(check_collision(player->x, player->y, PLAYER_SIZE, PLAYER_SIZE,
@@ -148,7 +160,6 @@ int main(int argc, char *argv[])
                 check_bullet(&game->bullets[i]);
                 if (game->bullets[i] == NULL)
                     continue;
-                // printf("blocat");
                 for (int j = 0; j < COLONIES_COUNT * COLONY_POPULATION; ++j) {
                     if (game->food[j] != NULL && game->bullets[i] != NULL) {
                         int result = check_collision(game->bullets[i]->x, game->bullets[i]->y, BULLET_SIZE, BULLET_SIZE,
@@ -161,11 +172,7 @@ int main(int argc, char *argv[])
                                 game->food[j]->dy += (game->bullets[i]->dy / 2);
                             game->food[j]->health -= game->bullets[i]->power;
 
-                            game->bullets[i]->penetration--;
-                            if (game->bullets[i]->penetration == 0) {
-                                free(game->bullets[i]);
-                                game->bullets[i] = NULL;
-                            }
+                            game->bullets[i] = hit_bullet(game->bullets[i]);
 
                             game->food[j]->last_hit = game->bullets[i];
                             printf("HIT! New food health %d\n", game->food[j]->health);
@@ -197,12 +204,12 @@ int main(int argc, char *argv[])
      
     // close SDL
     SDL_Quit();
+
+    TTF_Quit();
+
     free(player);
-    free_food(game->food);
-    for (int i = 0; i < game->max_bullets; ++i) {
-        if (game->bullets[i] != NULL)
-            free(game->bullets[i]);
-    }
+    free_food(game->food, COLONIES_COUNT * COLONY_POPULATION);
+    free_bullets(game->bullets, game->max_bullets);
     free(game->bullets);
     free(game);
 

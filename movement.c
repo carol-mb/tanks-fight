@@ -1,4 +1,4 @@
-#include "movement.h"
+#include "game.h"
 
 void update_player_position(TTank *player) {
     const Uint8* state = SDL_GetKeyboardState(NULL);
@@ -80,4 +80,9 @@ void update_bullet_position(TBullet *bullet) {
     bullet->y += bullet->dy;
     bullet->rect.x = bullet->x;
     bullet->rect.y = bullet->y;
+}
+
+void update_playground_position(TGameState *game, TTank *player) {
+    game->playground_rect.x = player->body.rect.x - player->x;
+    game->playground_rect.y = player->body.rect.y - player->y;
 }

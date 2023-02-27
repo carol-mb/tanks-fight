@@ -1,4 +1,4 @@
-#include "collision.h"
+#include "game.h"
 
 int check_collision (float obj_x, float obj_y, int obj_width, int obj_height,
                     float block_x, float block_y, int block_width, int block_height) {

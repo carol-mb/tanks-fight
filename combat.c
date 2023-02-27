@@ -1,5 +1,4 @@
-#include "combat.h"
-#include "movement.h"
+#include "game.h"
 
 void check_bullet(TBullet **bullet) {
     clock_t stop = clock();
@@ -7,6 +6,16 @@ void check_bullet(TBullet **bullet) {
         free(*bullet);
         *bullet = NULL;
     }
+}
+
+TBullet* hit_bullet(TBullet *bullet) {
+    bullet->penetration--;
+    if (bullet->penetration == 0) {
+        free(bullet);
+        bullet = NULL;
+    }
+
+    return bullet;
 }
 
 void default_shoot(TGameState *game) {
@@ -56,4 +65,11 @@ void default_shoot(TGameState *game) {
     game->bullets[pos]->dx = side * (BULLET_SPEED + game->player->bullet_speed * SPEED_BONUS) * cos(radians);
     game->bullets[pos]->dy = side * (BULLET_SPEED + game->player->bullet_speed * SPEED_BONUS) * sin(radians);
     game->player->last_shoot = clock();
+}
+
+void free_bullets(TBullet *bullets[], int nmax) {
+    for (int i = 0; i < nmax; ++i) {
+        if (bullets[i] != NULL)
+            free(bullets[i]);
+    }
 }

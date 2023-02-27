@@ -1,7 +1,5 @@
 // event.c
-#include "event.h"
-#include "combat.h"
-#include "movement.h"
+#include "game.h"
 
 int handle_event(TGameState* game) {
     SDL_Event event;

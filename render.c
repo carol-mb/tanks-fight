@@ -1,4 +1,4 @@
-#include "render.h"
+#include "game.h"
 
 void load_textures(TGameState *game) {    
     // please provide a path for your image
@@ -34,6 +34,13 @@ void load_textures(TGameState *game) {
     SDL_FreeSurface(grid_surface);
     SDL_FreeSurface(turret_surface);
     SDL_FreeSurface(bullet_surface);
+}
+
+void connect_textures(TGameState *game, TTank *player) {
+    // connects our texture with dest to control position
+    SDL_QueryTexture(game->turret_texture, NULL, NULL, &player->turret.rect.w, &player->turret.rect.h);
+    SDL_QueryTexture(game->body_texture, NULL, NULL, &player->body.rect.w, &player->body.rect.h);
+    SDL_QueryTexture(game->playground_texture, NULL, NULL, &game->playground_rect.w, &game->playground_rect.h);
 }
 
 void destroy_textures(TGameState* game) {
@@ -75,6 +82,23 @@ void render_game(TGameState *game) {
                             NULL, SDL_FLIP_NONE);
         }
     }
+    
+    // TTF_Font* Sans = TTF_OpenFont("/home/carol/tanks/sans.ttf", 24);
+    // if (!Sans) printf("failed to load font\n");
+    // SDL_Color White = {255, 255, 255};
+    // SDL_Surface* surfaceMessage = TTF_RenderText_Solid(Sans, "put your text here", White);
+    // SDL_Texture* Message = SDL_CreateTextureFromSurface(game->renderer, surfaceMessage);
+
+    // SDL_Rect Message_rect; //create a rect
+    // Message_rect.x = 0;  //controls the rect's x coordinate 
+    // Message_rect.y = 0; // controls the rect's y coordinte
+    // Message_rect.w = 200; // controls the width of the rect
+    // Message_rect.h = 24; // controls the height of the rect
+
+    // SDL_RenderCopy(game->renderer, Message, NULL, &Message_rect);
+
+    // SDL_FreeSurface(surfaceMessage);
+    // SDL_DestroyTexture(Message);
 
     // triggers the double buffers
     // for multiple rendering

@@ -1,18 +1,16 @@
-#include "food.h"
+#include "game.h"
 
 TFood* alloc_food(short type, int center_x, int center_y) {
     TFood *food = (TFood*)malloc(sizeof(TFood));
+    food->type = type;
     switch (type) {
         case FOOD_TRIANGLE:
-            food->type = FOOD_TRIANGLE;
             food->health = TRIANGLE_HEALTH;
         break;
         case FOOD_SQUARE:
-            food->type = FOOD_SQUARE;
             food->health = SQUARE_HEALTH;
         break;
         case FOOD_HEXAGON:
-            food->type = FOOD_HEXAGON;
             food->health = HEXAGON_HEALTH;
         break;
         default:
@@ -29,8 +27,8 @@ TFood* alloc_food(short type, int center_x, int center_y) {
     return food;
 }
 
-void free_food(TFood *food[]) {
-    for (int i = 0; i < COLONIES_COUNT * COLONY_POPULATION; ++i) {
+void free_food(TFood *food[], int nmax) {
+    for (int i = 0; i < nmax; ++i) {
         if (food[i] != NULL)
             free(food[i]);
     }
